@@ -34,6 +34,10 @@ model User {
   verifyToken       String?
   verifyTokenExpiry DateTime?
 
+  // 👇 Relations
+  streams   Stream[]   // one user can have many streams
+  viewers   Viewer[]   // one user can view many streams
+
   @@map("users")
 }
 
@@ -41,4 +45,29 @@ enum Role {
   USER
   ADMIN
   STREAMER
+}
+
+model Stream {
+  id           String     @id @default(uuid())
+  title        String
+  description  String?
+  isLive       Boolean    @default(false)
+  thumbnail    String?    // S3/Cloudinary URL
+  rtmpUrl      String     // rtmp://yourserver/live
+  streamKey    String     @unique // Auto-generated secret
+  userId       String
+  user         User       @relation(fields: [userId], references: [id])
+  viewers      Viewer[]   // Track viewers
+  startedAt    DateTime?
+  endedAt      DateTime?
+  createdAt    DateTime   @default(now())
+}
+
+model Viewer {
+  id        String   @id @default(uuid())
+  streamId  String
+  stream    Stream   @relation(fields: [streamId], references: [id])
+  userId    String?  
+  user      User?    @relation(fields: [userId], references: [id])
+  joinedAt  DateTime @default(now())
 }
